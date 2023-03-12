@@ -2,7 +2,8 @@ use std::env;
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
-use serenity::model::application::interaction::Interaction;
+use serenity::model::application::interaction::{Interaction, InteractionResponseType};
+use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
@@ -29,6 +30,7 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
+            ack(&command, &ctx).await;
             match command.data.name.as_str() {
                 "ms" => commands::render::run(&command, &ctx).await,
                 _ => unreachable!(),
@@ -36,6 +38,16 @@ impl EventHandler for Handler {
         }
     }
 }
+
+async fn ack(command: &ApplicationCommandInteraction, ctx: &Context) {
+    command
+        .create_interaction_response(&ctx.http, |response| {
+            response.kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        })
+        .await
+        .unwrap();
+}
+
 
 #[tokio::main]
 async fn main() {

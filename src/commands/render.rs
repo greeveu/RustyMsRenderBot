@@ -23,8 +23,6 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         return;
     }
 
-    ack(command, ctx).await;
-
     let game_id = game_id
         .expect("GameID is empty")
         .value
@@ -152,15 +150,6 @@ async fn error_response(command: &ApplicationCommandInteraction, ctx: &Context, 
                         .color(Color::from_rgb(255, 50, 50))
                 })
                 .flags(MessageFlags::EPHEMERAL)
-        })
-        .await
-        .unwrap();
-}
-
-async fn ack(command: &ApplicationCommandInteraction, ctx: &Context) {
-    command
-        .create_interaction_response(&ctx.http, |response| {
-            response.kind(InteractionResponseType::DeferredChannelMessageWithSource)
         })
         .await
         .unwrap();
