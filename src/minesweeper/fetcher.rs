@@ -8,13 +8,13 @@ pub struct ApiData {
     pub game_data: Option<String>,
     #[serde(rename = "type")]
     pub tiepe: String,
-    pub time: u32,
+    pub time: u64,
     pub generator: String,
     pub uuid: String,
     #[serde(rename = "correctFlags")]
-    pub correct_flags: u8,
+    pub correct_flags: u32,
     #[serde(rename = "incorrectFlags")]
-    pub incorrect_flags: u8,
+    pub incorrect_flags: u32,
     pub won: bool,
 }
 
