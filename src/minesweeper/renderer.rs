@@ -117,7 +117,7 @@ impl Renderer {
         let mut buffer = Cursor::new(vec![]);
 
         DynamicImage::ImageRgba8(frame)
-            .write_to(&mut buffer, image::ImageFormat::Jpeg)
+            .write_to(&mut buffer, image::ImageFormat::WebP)
             .unwrap();
 
         Ok(buffer.into_inner())

@@ -87,7 +87,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
             if let Some(data) = image_data_result.unwrap() {
                 return msg.add_file(Bytes {
                     data: Cow::from(data),
-                    filename: "game.jpeg".to_string(),
+                    filename: "game.webp".to_string(),
                 });
             }
 
