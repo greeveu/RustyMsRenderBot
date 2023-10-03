@@ -61,7 +61,7 @@ pub fn parse_mine_data(data: &str, metadata: &Metadata) -> Board {
     for cords in mines {
         let x = cords.0;
         let y = cords.1;
-        let mut field = &mut board.fields[x as usize][y as usize];
+        let field = &mut board.fields[x as usize][y as usize];
         field.mine = true;
     }
 

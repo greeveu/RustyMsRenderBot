@@ -91,13 +91,14 @@ impl Renderer {
         game_board: Board,
         open_data: Vec<OpenAction>,
         flag_data: Vec<FlagAction>,
+        gif: bool
     ) -> Renderer {
         Renderer {
             metadata,
             game_board,
             open_data,
             flag_data,
-            image_data: Imagedata::new(load_textures().as_slice()),
+            image_data: Imagedata::new(load_textures(gif).as_slice()),
         }
     }
 
@@ -199,7 +200,7 @@ impl Renderer {
             .set_repeat(Repeat::Infinite)
             .map_err(|_| MinesweeperError::GifEncoding)?;
 
-        for (i, image) in frames.into_iter().enumerate() {
+        for (_i, image) in frames.into_iter().enumerate() {
             let frame_delay = image.delay().numer_denom_ms().0 / 10;
             let rbga_frame = &mut image.into_buffer();
             let mut frame = GifFrame::from_rgba_speed(width as u16, height as u16, rbga_frame, 1);
