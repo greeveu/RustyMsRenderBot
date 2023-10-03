@@ -25,7 +25,7 @@ pub struct PlayerData {
 
 pub(crate) fn fetch_data(gameid: u64) -> Result<ApiData, MinesweeperError> {
     let request_data =
-        ureq::get(format!("https://api.greev.eu/v2/stats/minesweeper/game/{gameid}").as_ref())
+        ureq::get(format!("http://api.greev.eu/v2/stats/minesweeper/game/{gameid}").as_ref())
             .call()
             .map_err(|_| MinesweeperError::GameDataNotFound)?
             .into_string()
@@ -35,7 +35,7 @@ pub(crate) fn fetch_data(gameid: u64) -> Result<ApiData, MinesweeperError> {
 }
 
 pub(crate) fn fetch_name(uuid: &str) -> Result<PlayerData, MinesweeperError> {
-    let request_data = ureq::get(format!("https://api.greev.eu/v2/player/name/{uuid}").as_ref())
+    let request_data = ureq::get(format!("http://api.greev.eu/v2/player/name/{uuid}").as_ref())
         .call()
         .map_err(|_| MinesweeperError::GameDataNotFound)?
         .into_string()
