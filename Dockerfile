@@ -1,6 +1,7 @@
 FROM rust:1.73.0-slim-bookworm
 
-# 2. Copy the files in your machine to the Docker image
+WORKDIR /usr/src/renderer
+
 COPY Cargo.toml ./
 COPY Cargo.lock ./
 COPY src ./src
