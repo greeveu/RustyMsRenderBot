@@ -1,4 +1,4 @@
-FROM rust:1.73.0-slim-bookworm
+FROM rust:1.73.0-slim-bookworm as builder
 
 WORKDIR /usr/src/renderer
 
@@ -7,8 +7,11 @@ COPY Cargo.lock ./
 COPY src ./src
 COPY resources ./resources
 
-# Build your program for release
 RUN cargo build --release
 
-# Run the binary
-CMD ["./target/release/ms_renderer"]
+FROM scratch
+
+WORKDIR /usr/src/renderer
+
+COPY --from=builder /usr/src/renderer/target/release/ms_renderer ./ms_renderer
+CMD ["./ms_renderer"]
