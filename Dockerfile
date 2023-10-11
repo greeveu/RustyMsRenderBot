@@ -2,11 +2,7 @@ FROM rust:1.73.0-slim-bookworm as builder
 
 WORKDIR /usr/src/renderer
 
-COPY Cargo.toml ./
-COPY Cargo.lock ./
-COPY src ./src
-COPY resources ./resources
-
+COPY ./ ./
 RUN cargo build --release
 
 FROM scratch
