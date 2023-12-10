@@ -45,7 +45,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
 
     let api_data = result_api_data.unwrap();
 
-    let image_data_result = get_image_data(&api_data, gif).await;
+    let image_data_result = get_image_data(&api_data, &gif).await;
 
     if let Err(error) = image_data_result {
         error_response(command, ctx, error.to_string().as_str()).await;
@@ -105,7 +105,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
     }
 }
 
-async fn get_image_data(api_data: &ApiData, mut gif: bool) -> Result<Option<Vec<u8>>, CommandError> {
+async fn get_image_data(api_data: &ApiData, mut gif: &bool) -> Result<Option<Vec<u8>>, CommandError> {
     if let Some(game_data) = &api_data.game_data {
         let option = game_data.split_once('=').expect("Unable to get Version");
 
@@ -117,7 +117,7 @@ async fn get_image_data(api_data: &ApiData, mut gif: bool) -> Result<Option<Vec<
 
         //If the field is too large overwrite the gif value to not render a gif
         if game_data.metadata.x_size > 32 || game_data.metadata.y_size > 32 {
-            gif = false
+            gif = &false
         }
 
         let mut renderer = Renderer::new(
@@ -129,7 +129,7 @@ async fn get_image_data(api_data: &ApiData, mut gif: bool) -> Result<Option<Vec<
         );
 
         Ok(Some(
-            if gif {
+            if *gif {
                 renderer
                     .render_gif()
                     .map_err(|_| CommandError::ImageRender)?
