@@ -12,7 +12,8 @@ use serenity::utils::Color;
 use crate::commands::error::CommandError;
 use crate::minesweeper;
 use crate::minesweeper::fetcher::{ApiData, fetch_name, PlayerData};
-use crate::minesweeper::parser::parse_v1;
+use crate::minesweeper::parsers;
+use crate::minesweeper::parsers::parser::{Iparser, ParsedData};
 use crate::minesweeper::renderer::Renderer;
 
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
@@ -109,11 +110,31 @@ async fn get_image_data(api_data: &ApiData, mut gif: &bool) -> Result<Option<Vec
     if let Some(game_data) = &api_data.game_data {
         let option = game_data.split_once('=').expect("Unable to get Version");
 
-        if !(option.0.eq("1")) {
+        let possible_parsers: Vec<&dyn Iparser> = vec![
+            &parsers::v1::parser::ParserV1,
+            &parsers::v2::parser::ParserV2,
+        ];
+
+        let option_found_parser = possible_parsers
+            .iter()
+            .find(|p| p.supported_versions().contains(&option.0));
+
+        if option_found_parser.is_none() {
             return Err(CommandError::UnsupportedVersion);
         }
 
-        let game_data = parse_v1(option.1).map_err(|_| CommandError::DataParse)?;
+        let parser = option_found_parser.unwrap();
+
+        let split: Vec<&str> = option.1.split('+').collect();
+
+        let metadata = parser.parse_meta_data(split[0].trim());
+
+        let game_data = ParsedData {
+            game_board: parser.parse_mine_data(split[1].trim(), &metadata),
+            open_data: parser.parse_open_data(split[2].trim()),
+            flag_data: parser.parse_flag_data(split[3].trim()),
+            metadata,
+        };
 
         //If the field is too large overwrite the gif value to not render a gif
         if game_data.metadata.x_size > 32 || game_data.metadata.y_size > 32 {

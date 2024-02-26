@@ -7,7 +7,7 @@ use image::{Delay, DynamicImage, Frame, GenericImage, ImageBuffer, Rgba};
 
 use crate::minesweeper::error::MinesweeperError;
 use crate::minesweeper::minesweeper_logic::{Board, FieldState};
-use crate::minesweeper::parser::{ActionType, FlagAction, Metadata, OpenAction};
+use crate::minesweeper::parsers::parser::{ActionType, FlagAction, Metadata, OpenAction};
 use crate::minesweeper::textures::load_textures;
 
 pub struct Renderer {
@@ -49,6 +49,7 @@ struct Imagedata {
     tnt: ImageBuffer<Rgba<u8>, Vec<u8>>,
     empty: ImageBuffer<Rgba<u8>, Vec<u8>>,
     flag: ImageBuffer<Rgba<u8>, Vec<u8>>,
+    unsure_flag: ImageBuffer<Rgba<u8>, Vec<u8>>,
 }
 
 impl Imagedata {
@@ -67,6 +68,7 @@ impl Imagedata {
         let tnt = im.sub_image(32 * 9, 0, 32, 32).to_image();
         let empty = im.sub_image(32 * 10, 0, 32, 32).to_image();
         let flag = im.sub_image(32 * 11, 0, 32, 32).to_image();
+        let unsure_flag = im.sub_image(32 * 12, 0, 32, 32).to_image();
 
         Imagedata {
             zero,
@@ -81,6 +83,7 @@ impl Imagedata {
             tnt,
             empty,
             flag,
+            unsure_flag,
         }
     }
 }
@@ -141,7 +144,7 @@ impl Renderer {
             let next_tick = tick_map.keys().nth(id + 1);
 
             let duration = if let Some(next) = next_tick {
-                Duration::from_millis(((next - tick.0) * 50) as u64)
+                Duration::from_millis(((next - tick.0) * self.metadata.timeunits as i64) as u64)
             } else {
                 Duration::from_secs(15)
             };
@@ -257,10 +260,10 @@ impl Renderer {
 
         for x in 0..self.metadata.x_size as u32 {
             for y in 0..self.metadata.y_size as u32 {
-                let field = &self.game_board.fields[x as usize][y as usize];
+                let field = &self.game_board.fields[y as usize][x as usize];
 
                 // Only render fields that got changed in the last iteration
-                if !self.game_board.changed_fields[x as usize][y as usize] {
+                if !self.game_board.changed_fields[y as usize][x as usize] {
                     continue;
                 }
 
@@ -275,6 +278,12 @@ impl Renderer {
                 if field.field_state == FieldState::Flagged {
                     imgbuf
                         .copy_from(&self.image_data.flag, xx, yy)
+                        .map_err(|_| MinesweeperError::ImageInsertion)?;
+                    continue;
+                }
+                if field.field_state == FieldState::UnsureFlagged {
+                    imgbuf
+                        .copy_from(&self.image_data.unsure_flag, xx, yy)
                         .map_err(|_| MinesweeperError::ImageInsertion)?;
                     continue;
                 }
