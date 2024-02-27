@@ -2,8 +2,8 @@ use std::env;
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
-use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::application::interaction::application_command::ApplicationCommandInteraction;
+use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
@@ -47,7 +47,6 @@ async fn ack(command: &ApplicationCommandInteraction, ctx: &Context) {
         .await
         .unwrap();
 }
-
 
 #[tokio::main]
 async fn main() {

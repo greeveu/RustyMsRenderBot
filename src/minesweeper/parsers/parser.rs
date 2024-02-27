@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::minesweeper::minesweeper_logic::{Board, FieldState};
+use serde::{Deserialize, Serialize};
 
 pub trait Iparser {
     fn supported_versions(&self) -> Vec<&str>;

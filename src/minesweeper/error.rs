@@ -14,4 +14,6 @@ pub enum MinesweeperError {
     GameDataNotFound,
     #[error("Data could not be parsed")]
     DataParseError,
+    #[error("No Api Key was found for the provider")]
+    ApiKeyNotFound,
 }

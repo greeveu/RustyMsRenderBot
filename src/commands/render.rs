@@ -10,15 +10,17 @@ use serenity::model::channel::AttachmentType::Bytes;
 use serenity::utils::Color;
 
 use crate::commands::error::CommandError;
-use crate::minesweeper;
-use crate::minesweeper::fetcher::{ApiData, fetch_name, PlayerData};
 use crate::minesweeper::parsers;
 use crate::minesweeper::parsers::parser::{Iparser, ParsedData};
+use crate::minesweeper::provider::greev::greev_provider::GreevProvider;
+use crate::minesweeper::provider::mcplayhd::mcplay_provider::McPlayHdProvider;
+use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 use crate::minesweeper::renderer::Renderer;
 
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
     let game_id = command.data.options.iter().find(|x| x.name.eq("game_id"));
     let use_gif = command.data.options.iter().find(|x| x.name.eq("gif"));
+    let option_provider = command.data.options.iter().find(|x| x.name.eq("provider"));
 
     if game_id.is_none() || game_id.unwrap().value.as_ref().is_none() {
         error_response(command, ctx, "Please provide a game id").await;
@@ -37,7 +39,24 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         .map(|x| x.value.as_ref().unwrap().as_bool().unwrap_or(false))
         .unwrap_or(false);
 
-    let result_api_data = minesweeper::fetcher::fetch_data(game_id);
+    let possible_providers: Vec<&dyn Provider> = vec![&GreevProvider, &McPlayHdProvider];
+
+    let provider = option_provider
+        .map(|x| x.value.as_ref().unwrap().as_str().unwrap().to_lowercase())
+        .unwrap_or("greev".to_string());
+
+    let optional_provider = possible_providers
+        .iter()
+        .find(|x| x.id() == provider.as_str());
+
+    if optional_provider.is_none() {
+        error_response(command, ctx, "Unknown Provider").await;
+        return;
+    }
+
+    let provider = optional_provider.unwrap();
+
+    let result_api_data = provider.fetch_data(game_id);
 
     if result_api_data.is_err() {
         error_response(command, ctx, "Unable to fetch game data").await;
@@ -56,57 +75,122 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
     let timestamp = NaiveDateTime::from_timestamp_millis(api_data.time as i64)
         .expect("Unable to get Timestamp from time");
 
-    let player_data = fetch_name(api_data.uuid.as_str()).unwrap_or_else(|_| PlayerData {
-        name: "%".to_string(),
-    });
+    let player_data = provider
+        .fetch_name(api_data.uuid.as_str())
+        .unwrap_or_else(|_| PlayerData {
+            name: "%".to_string(),
+        });
 
-    let result = command
-        .create_followup_message(&ctx.http, |message| {
-            let msg = message.embed(|e| {
-                e.title(format!("Minesweeper Game {}", game_id))
-                    .field("Username", player_data.name, true)
-                    .field(
-                        "Time",
-                        format!(
-                            "{:02}:{:02}:{:02}.{:2}",
-                            timestamp.hour(),
-                            timestamp.minute(),
-                            timestamp.second(),
-                            timestamp.nanosecond() / 1_000_000
-                        ),
-                        true,
-                    )
-                    .field("", "", false)
-                    .field("Difficulty", api_data.tiepe, true)
-                    .field("Generator", api_data.generator, true)
-                    .field("", "", false)
-                    .field("Correct Flags", api_data.correct_flags, true)
-                    .field("Incorrect Flags", api_data.incorrect_flags, true)
-                    .field("Won", if api_data.won { "Yes" } else { "No" }, false)
-                    .color(if api_data.won {
-                        Color::from_rgb(102, 187, 106)
-                    } else {
-                        Color::from_rgb(255, 138, 101)
-                    })
-            });
+    let result = match provider.id() {
+        "greev" => {
+            command
+                .create_followup_message(&ctx.http, |message| {
+                    let msg = message.embed(|e| {
+                        e.title(format!("Minesweeper Game {}", game_id))
+                            .field("Username", player_data.name, true)
+                            .field(
+                                "Time",
+                                format!(
+                                    "{:02}:{:02}:{:02}.{:2}",
+                                    timestamp.hour(),
+                                    timestamp.minute(),
+                                    timestamp.second(),
+                                    timestamp.nanosecond() / 1_000_000
+                                ),
+                                true,
+                            )
+                            .field("", "", false)
+                            .field(
+                                "Difficulty",
+                                api_data.tiepe.expect("type is required for greev"),
+                                true,
+                            )
+                            .field(
+                                "Generator",
+                                api_data.generator.expect("generator is required for greev"),
+                                true,
+                            )
+                            .field("", "", false)
+                            .field(
+                                "Correct Flags",
+                                api_data
+                                    .correct_flags
+                                    .expect("correct_flags is required for greev"),
+                                true,
+                            )
+                            .field(
+                                "Incorrect Flags",
+                                api_data
+                                    .incorrect_flags
+                                    .expect("incorrect_flags is required for greev"),
+                                true,
+                            )
+                            .field("Won", if api_data.won { "Yes" } else { "No" }, false)
+                            .color(if api_data.won {
+                                Color::from_rgb(102, 187, 106)
+                            } else {
+                                Color::from_rgb(255, 138, 101)
+                            })
+                    });
 
-            if let Some(data) = image_data_result.unwrap() {
-                return msg.add_file(Bytes {
-                    data: Cow::from(data),
-                    filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
-                });
-            }
+                    if let Some(data) = image_data_result.unwrap() {
+                        return msg.add_file(Bytes {
+                            data: Cow::from(data),
+                            filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
+                        });
+                    }
 
-            msg
-        })
-        .await;
+                    msg
+                })
+                .await
+        }
+        _ => {
+            command
+                .create_followup_message(&ctx.http, |message| {
+                    let msg = message.embed(|e| {
+                        e.title(format!("Minesweeper Game {}", game_id))
+                            .field("Username", player_data.name, true)
+                            .field(
+                                "Time",
+                                format!(
+                                    "{:02}:{:02}:{:02}.{:2}",
+                                    timestamp.hour(),
+                                    timestamp.minute(),
+                                    timestamp.second(),
+                                    timestamp.nanosecond() / 1_000_000
+                                ),
+                                true,
+                            )
+                            .field("Won", if api_data.won { "Yes" } else { "No" }, false)
+                            .color(if api_data.won {
+                                Color::from_rgb(102, 187, 106)
+                            } else {
+                                Color::from_rgb(255, 138, 101)
+                            })
+                    });
+
+                    if let Some(data) = image_data_result.unwrap() {
+                        return msg.add_file(Bytes {
+                            data: Cow::from(data),
+                            filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
+                        });
+                    }
+
+                    msg
+                })
+                .await
+        }
+    };
 
     if let Err(error) = result {
         println!("Was unable to respond to command! {:?}", error)
     }
 }
 
-async fn get_image_data(api_data: &ApiData, mut gif: &bool) -> Result<Option<Vec<u8>>, CommandError> {
+async fn get_image_data(
+    api_data: &ApiData,
+    mut gif: &bool,
+) -> Result<Option<Vec<u8>>, CommandError> {
     if let Some(game_data) = &api_data.game_data {
         let option = game_data.split_once('=').expect("Unable to get Version");
 
@@ -149,17 +233,15 @@ async fn get_image_data(api_data: &ApiData, mut gif: &bool) -> Result<Option<Vec
             gif,
         );
 
-        Ok(Some(
-            if *gif {
-                renderer
-                    .render_gif()
-                    .map_err(|_| CommandError::ImageRender)?
-            } else {
-                renderer
-                    .render_jpeg()
-                    .map_err(|_| CommandError::ImageRender)?
-            }
-        ))
+        Ok(Some(if *gif {
+            renderer
+                .render_gif()
+                .map_err(|_| CommandError::ImageRender)?
+        } else {
+            renderer
+                .render_jpeg()
+                .map_err(|_| CommandError::ImageRender)?
+        }))
     } else {
         Ok(None)
     }
@@ -182,6 +264,13 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("gif")
                 .description("Render the game as a gif (Only up to 32x32 fields)")
                 .kind(CommandOptionType::Boolean)
+                .required(false)
+        })
+        .create_option(|option| {
+            option
+                .name("provider")
+                .description("Where the game was played (Default: greev; Other options: mcplayhd)")
+                .kind(CommandOptionType::String)
                 .required(false)
         })
 }

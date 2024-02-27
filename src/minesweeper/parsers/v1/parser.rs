@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use crate::minesweeper::base62::decode;
 use crate::minesweeper::minesweeper_logic::{Board, Field};
+use std::str::FromStr;
 
 use crate::minesweeper::parsers::parser::{Action, FlagAction, Iparser, Metadata, OpenAction};
 

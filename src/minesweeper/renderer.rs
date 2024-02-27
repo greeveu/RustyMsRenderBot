@@ -94,7 +94,7 @@ impl Renderer {
         game_board: Board,
         open_data: Vec<OpenAction>,
         flag_data: Vec<FlagAction>,
-        gif: &bool
+        gif: &bool,
     ) -> Renderer {
         Renderer {
             metadata,

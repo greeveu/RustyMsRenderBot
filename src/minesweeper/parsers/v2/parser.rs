@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use crate::minesweeper::base62::decode;
 use crate::minesweeper::minesweeper_logic::{Board, Field};
+use std::str::FromStr;
 
 use crate::minesweeper::parsers::parser::{Action, FlagAction, Iparser, Metadata, OpenAction};
 
@@ -237,7 +237,10 @@ impl Iparser for ParserV2 {
 
     fn parse_meta_data(&self, data: &str) -> Metadata {
         let data_split_1 = data.split_once('x').expect("Unable to parse Metadata");
-        let data_split_2 = data_split_1.1.split_once(',').expect("Unable to parse Metadata");
+        let data_split_2 = data_split_1
+            .1
+            .split_once(',')
+            .expect("Unable to parse Metadata");
         Metadata {
             x_size: i32::from_str(data_split_1.0).expect("Unable to parse Metadata"),
             y_size: i32::from_str(data_split_2.0).expect("Unable to parse Metadata"),
