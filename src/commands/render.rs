@@ -17,7 +17,7 @@ use crate::minesweeper::provider::mcplayhd::mcplay_provider::McPlayHdProvider;
 use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 use crate::minesweeper::renderer::Renderer;
 
-const DEFAULT_PROVIDER: &str = "greev";
+const DEFAULT_PROVIDER: &str = "mcplayhd";
 
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
     let game_id = command.data.options.iter().find(|x| x.name.eq("game_id"));
