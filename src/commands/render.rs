@@ -17,6 +17,8 @@ use crate::minesweeper::provider::mcplayhd::mcplay_provider::McPlayHdProvider;
 use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 use crate::minesweeper::renderer::Renderer;
 
+const DEFAULT_PROVIDER: &str = "greev";
+
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
     let game_id = command.data.options.iter().find(|x| x.name.eq("game_id"));
     let use_gif = command.data.options.iter().find(|x| x.name.eq("gif"));
@@ -43,7 +45,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
 
     let provider = option_provider
         .map(|x| x.value.as_ref().unwrap().as_str().unwrap().to_lowercase())
-        .unwrap_or("greev".to_string());
+        .unwrap_or(DEFAULT_PROVIDER.to_string());
 
     let optional_provider = possible_providers
         .iter()
@@ -250,7 +252,7 @@ async fn get_image_data(
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("ms")
-        .description("Show info about a Minesweeper Game played on greev.eu")
+        .description("Shows details about a Minesweeper Game")
         .create_option(|option| {
             option
                 .name("game_id")
@@ -268,7 +270,9 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .create_option(|option| {
             option
                 .name("provider")
-                .description("Where the game was played (Default: greev)")
+                .description(format!(
+                    "Where the game was played (Default: {DEFAULT_PROVIDER})"
+                ))
                 .kind(CommandOptionType::String)
                 .add_string_choice("Greev", "greev")
                 .add_string_choice("McPlayHD", "mcplayhd")

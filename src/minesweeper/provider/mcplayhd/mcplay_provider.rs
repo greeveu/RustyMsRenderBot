@@ -1,3 +1,4 @@
+use crate::minesweeper::base36;
 use crate::minesweeper::error::MinesweeperError;
 use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 
@@ -18,14 +19,15 @@ impl Provider for McPlayHdProvider {
             return Err(MinesweeperError::ApiKeyNotFound);
         }
 
-        let request_data = ureq::get(
-            format!("https://mcplayhd.net/api/v1/minesweeper/stats/game/{gameid}").as_ref(),
-        )
-        .set("Authorization", format!("Bearer {api_key}").as_str())
-        .call()
-        .map_err(|_| MinesweeperError::GameDataNotFound)?
-        .into_string()
-        .map_err(|_| MinesweeperError::GameDataNotFound)?;
+        let id = base36::decode(gameid);
+
+        let request_data =
+            ureq::get(format!("https://mcplayhd.net/api/v1/minesweeper/stats/game/{id}").as_ref())
+                .set("Authorization", format!("Bearer {api_key}").as_str())
+                .call()
+                .map_err(|_| MinesweeperError::GameDataNotFound)?
+                .into_string()
+                .map_err(|_| MinesweeperError::GameDataNotFound)?;
 
         serde_json::from_str(request_data.as_ref()).map_err(|_| MinesweeperError::ApiDataParse)
     }
