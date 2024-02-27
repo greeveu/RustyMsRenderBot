@@ -12,7 +12,7 @@ impl Provider for McPlayHdProvider {
         "McPlayHD"
     }
 
-    fn fetch_data(&self, gameid: u64) -> Result<ApiData, MinesweeperError> {
+    fn fetch_data(&self, gameid: &str) -> Result<ApiData, MinesweeperError> {
         let api_key = get_api_key();
         if String::is_empty(&api_key) {
             return Err(MinesweeperError::ApiKeyNotFound);

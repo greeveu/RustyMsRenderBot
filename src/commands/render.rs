@@ -32,8 +32,8 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         .value
         .as_ref()
         .expect("Unable to get value")
-        .as_u64()
-        .expect("Unable to get the GameID as u64");
+        .as_str()
+        .expect("Unable to get the GameID as str");
 
     let gif = use_gif
         .map(|x| x.value.as_ref().unwrap().as_bool().unwrap_or(false))
@@ -255,8 +255,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             option
                 .name("game_id")
                 .description("The GameID of the Minesweeper round")
-                .kind(CommandOptionType::Integer)
-                .min_int_value(1)
+                .kind(CommandOptionType::String)
                 .required(true)
         })
         .create_option(|option| {
@@ -269,8 +268,10 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .create_option(|option| {
             option
                 .name("provider")
-                .description("Where the game was played (Default: greev; Other options: mcplayhd)")
+                .description("Where the game was played (Default: greev)")
                 .kind(CommandOptionType::String)
+                .add_string_choice("Greev", "greev")
+                .add_string_choice("McPlayHD", "mcplayhd")
                 .required(false)
         })
 }

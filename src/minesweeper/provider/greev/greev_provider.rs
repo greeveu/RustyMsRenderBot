@@ -12,7 +12,7 @@ impl Provider for GreevProvider {
         "Greev"
     }
 
-    fn fetch_data(&self, gameid: u64) -> Result<ApiData, MinesweeperError> {
+    fn fetch_data(&self, gameid: &str) -> Result<ApiData, MinesweeperError> {
         let request_data =
             ureq::get(format!("http://api.greev.eu/v2/stats/minesweeper/game/{gameid}").as_ref())
                 .call()
