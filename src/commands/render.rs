@@ -150,7 +150,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
             command
                 .create_followup_message(&ctx.http, |message| {
                     let msg = message.embed(|e| {
-                        e.title(format!("Minesweeper Game {}", game_id))
+                        e.title(format!("[McPlayHD] Minesweeper Game {}", game_id))
                             .field("Username", player_data.name, true)
                             .field(
                                 "Time",
