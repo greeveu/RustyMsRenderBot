@@ -146,6 +146,57 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                 })
                 .await
         }
+        "mcplayhd" => {
+            command
+                .create_followup_message(&ctx.http, |message| {
+                    let msg = message.embed(|e| {
+                        e.title(format!("Minesweeper Game {}", game_id))
+                            .field("Username", player_data.name, true)
+                            .field(
+                                "Time",
+                                format!(
+                                    "{:02}:{:02}:{:02}.{:2}",
+                                    timestamp.hour(),
+                                    timestamp.minute(),
+                                    timestamp.second(),
+                                    timestamp.nanosecond() / 1_000_000
+                                ),
+                                true,
+                            )
+                            .field("", "", false)
+                            .field(
+                                "Correct Flags",
+                                api_data
+                                    .correct_flags
+                                    .expect("correct_flags is required for mcplayhd"),
+                                true,
+                            )
+                            .field(
+                                "Incorrect Flags",
+                                api_data
+                                    .incorrect_flags
+                                    .expect("incorrect_flags is required for mcplayhd"),
+                                true,
+                            )
+                            .field("Won", if api_data.won { "Yes" } else { "No" }, false)
+                            .color(if api_data.won {
+                                Color::from_rgb(102, 187, 106)
+                            } else {
+                                Color::from_rgb(255, 138, 101)
+                            })
+                    });
+
+                    if let Some(data) = image_data_result.unwrap() {
+                        return msg.add_file(Bytes {
+                            data: Cow::from(data),
+                            filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
+                        });
+                    }
+
+                    msg
+                })
+                .await
+        }
         _ => {
             command
                 .create_followup_message(&ctx.http, |message| {
