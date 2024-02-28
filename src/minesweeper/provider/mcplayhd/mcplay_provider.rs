@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-use chrono::{NaiveDateTime, Timelike};
 use crate::minesweeper::base36;
 use crate::minesweeper::error::MinesweeperError;
 use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
