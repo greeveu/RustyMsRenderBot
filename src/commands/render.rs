@@ -93,7 +93,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             .field(
                                 "Time",
                                 format!(
-                                    "{:02}:{:02}:{:02}.{:2}",
+                                    "{:02}:{:02}:{:02}.{:03}",
                                     timestamp.hour(),
                                     timestamp.minute(),
                                     timestamp.second(),
@@ -155,7 +155,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             .field(
                                 "Time",
                                 format!(
-                                    "{:02}:{:02}:{:02}.{:2}",
+                                    "{:02}:{:02}:{:02}.{:03}",
                                     timestamp.hour(),
                                     timestamp.minute(),
                                     timestamp.second(),
@@ -206,7 +206,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             .field(
                                 "Time",
                                 format!(
-                                    "{:02}:{:02}:{:02}.{:2}",
+                                    "{:02}:{:02}:{:02}.{:03}",
                                     timestamp.hour(),
                                     timestamp.minute(),
                                     timestamp.second(),
