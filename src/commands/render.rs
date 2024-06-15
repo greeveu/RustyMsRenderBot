@@ -18,7 +18,7 @@ use crate::minesweeper::provider::mcplayhd::mcplay_provider::McPlayHdProvider;
 use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 use crate::minesweeper::renderer::Renderer;
 
-const DEFAULT_PROVIDER: &str = "greev";
+const DEFAULT_PROVIDER: &str = "mcplayhd";
 const DEFAULT_PROVIDER_GREEV: &str = "greev";
 const DEFAULT_PROVIDER_MCPLAY: &str = "mcplayhd";
 
