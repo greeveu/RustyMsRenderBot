@@ -19,6 +19,8 @@ use crate::minesweeper::provider::provider::{ApiData, PlayerData, Provider};
 use crate::minesweeper::renderer::Renderer;
 
 const DEFAULT_PROVIDER: &str = "greev";
+const DEFAULT_PROVIDER_GREEV: &str = "greev";
+const DEFAULT_PROVIDER_MCPLAY: &str = "mcplayhd";
 
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
     let game_id = command.data.options.iter().find(|x| x.name.eq("game_id"));
@@ -89,11 +91,11 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         });
 
     let result = match provider.id() {
-        "greev" => {
+        DEFAULT_PROVIDER_GREEV => {
             command
                 .create_followup_message(&ctx.http, |message| {
                     let msg = message.embed(|e| {
-                        e.title(format!("[Greev] Minesweeper Game {}", game_id))
+                        e.title(format!("{}Minesweeper Game {}", if DEFAULT_PROVIDER.eq(DEFAULT_PROVIDER_GREEV) { "" } else { "[Greev] " }, game_id))
                             .field("Username", player_data.name, true)
                             .field(
                                 "Time",
@@ -151,13 +153,13 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                 })
                 .await
         }
-        "mcplayhd" => {
+        DEFAULT_PROVIDER_MCPLAY => {
             command
                 .create_followup_message(&ctx.http, |message| {
                     let game_data = image_data_result_embed
                         .expect("GameData is required for mcplayhd");
                     let msg = message.embed(|e| {
-                        e.title(format!("[McPlayHD] Minesweeper Game {}", game_id))
+                        e.title(format!("{}Minesweeper Game {}", if DEFAULT_PROVIDER.eq(DEFAULT_PROVIDER_MCPLAY) { "" } else { "[McPlayHD] " } , game_id))
                             .field("Username", player_data.name, true)
                             .field(
                                 "Time",
@@ -347,8 +349,8 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                     "Where the game was played (Default: {DEFAULT_PROVIDER})"
                 ))
                 .kind(CommandOptionType::String)
-                .add_string_choice("Greev", "greev")
-                .add_string_choice("McPlayHD", "mcplayhd")
+                .add_string_choice("Greev", DEFAULT_PROVIDER_GREEV)
+                .add_string_choice("McPlayHD", DEFAULT_PROVIDER_MCPLAY)
                 .required(false)
         })
 }
