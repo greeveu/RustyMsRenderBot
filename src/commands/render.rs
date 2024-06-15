@@ -10,6 +10,7 @@ use serenity::model::channel::AttachmentType::Bytes;
 use serenity::utils::Color;
 
 use crate::commands::error::CommandError;
+use crate::minesweeper::game_data::GameData;
 use crate::minesweeper::parsers;
 use crate::minesweeper::parsers::parser::{Iparser, ParsedData};
 use crate::minesweeper::provider::greev::greev_provider::GreevProvider;
@@ -74,6 +75,10 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         return;
     }
 
+    let image_data_result = image_data_result.unwrap();
+    //We need to clone the image_data_result to be able to use it in the embed as it is moved
+    let image_data_result_embed = image_data_result.clone();
+
     let timestamp = NaiveDateTime::from_timestamp_millis(api_data.time as i64)
         .expect("Unable to get Timestamp from time");
 
@@ -135,9 +140,9 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             })
                     });
 
-                    if let Some(data) = image_data_result.unwrap() {
+                    if let Some(data) = image_data_result {
                         return msg.add_file(Bytes {
-                            data: Cow::from(data),
+                            data: Cow::from(data.image_data),
                             filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
                         });
                     }
@@ -149,6 +154,8 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         "mcplayhd" => {
             command
                 .create_followup_message(&ctx.http, |message| {
+                    let game_data = image_data_result_embed
+                        .expect("GameData is required for mcplayhd");
                     let msg = message.embed(|e| {
                         e.title(format!("[McPlayHD] Minesweeper Game {}", game_id))
                             .field("Username", player_data.name, true)
@@ -178,6 +185,11 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                                     .expect("incorrect_flags is required for mcplayhd"),
                                 true,
                             )
+                            .field(
+                                "Uncovered Fields",
+                                game_data.opened_fields.to_string() + "/" + (game_data.total_fields - game_data.mine_count).to_string().as_str(),
+                                true,
+                            )
                             .field("Won", if api_data.won { "Yes" } else { "No" }, false)
                             .color(if api_data.won {
                                 Color::from_rgb(102, 187, 106)
@@ -186,9 +198,9 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             })
                     });
 
-                    if let Some(data) = image_data_result.unwrap() {
+                    if let Some(data) = image_data_result {
                         return msg.add_file(Bytes {
-                            data: Cow::from(data),
+                            data: Cow::from(data.image_data),
                             filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
                         });
                     }
@@ -222,9 +234,9 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
                             })
                     });
 
-                    if let Some(data) = image_data_result.unwrap() {
+                    if let Some(data) = image_data_result {
                         return msg.add_file(Bytes {
-                            data: Cow::from(data),
+                            data: Cow::from(data.image_data),
                             filename: "game".to_string() + if gif { ".gif" } else { ".webp" },
                         });
                     }
@@ -243,7 +255,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
 async fn get_image_data(
     api_data: &ApiData,
     mut gif: &bool,
-) -> Result<Option<Vec<u8>>, CommandError> {
+) -> Result<Option<GameData>, CommandError> {
     if let Some(game_data) = &api_data.game_data {
         let option = game_data.split_once('=').expect("Unable to get Version");
 
@@ -286,7 +298,7 @@ async fn get_image_data(
             gif,
         );
 
-        Ok(Some(if *gif {
+        let image_data = if *gif {
             renderer
                 .render_gif()
                 .map_err(|_| CommandError::ImageRender)?
@@ -294,6 +306,16 @@ async fn get_image_data(
             renderer
                 .render_jpeg()
                 .map_err(|_| CommandError::ImageRender)?
+        };
+
+        Ok(Some(GameData {
+            image_data,
+            total_actions: (renderer.open_data.len() + renderer.flag_data.len()) as u8,
+            opened_fields: renderer.game_board.open_fields as u8,
+            closed_fields: (renderer.game_board.total_fields - renderer.game_board.open_fields)
+                as u8,
+            total_fields: renderer.game_board.total_fields as u8,
+            mine_count: renderer.game_board.mine_count as u8,
         }))
     } else {
         Ok(None)
