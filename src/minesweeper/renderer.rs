@@ -12,9 +12,9 @@ use crate::minesweeper::textures::load_textures;
 
 pub struct Renderer {
     pub(crate) metadata: Metadata,
-    game_board: Board,
-    open_data: Vec<OpenAction>,
-    flag_data: Vec<FlagAction>,
+    pub(crate) game_board: Board,
+    pub open_data: Vec<OpenAction>,
+    pub flag_data: Vec<FlagAction>,
     image_data: Imagedata,
 }
 
