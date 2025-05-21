@@ -1,4 +1,4 @@
-FROM rust:1.73.0-slim-bookworm
+FROM rust:1.87.0-slim-bookworm
 
 WORKDIR /usr/src/renderer
 
