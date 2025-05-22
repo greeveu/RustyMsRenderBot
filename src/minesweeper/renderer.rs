@@ -263,7 +263,7 @@ impl Renderer {
                 let field = &self.game_board.fields[y as usize][x as usize];
 
                 // Only render fields that got changed in the last iteration
-                if !self.game_board.changed_fields[y as usize][x as usize] {
+                if !self.game_board.changed_fields[y as usize][x as usize] && percentage != 100 {
                     continue;
                 }
 
