@@ -15,6 +15,7 @@ pub struct Renderer {
     pub open_data: Vec<OpenAction>,
     pub flag_data: Vec<FlagAction>,
     image_data: Imagedata,
+    full: bool,
 }
 
 #[derive(Copy, Clone)]
@@ -94,6 +95,7 @@ impl Renderer {
         open_data: Vec<OpenAction>,
         flag_data: Vec<FlagAction>,
         gif: &bool,
+        full: &bool,
     ) -> Renderer {
         Renderer {
             metadata,
@@ -101,6 +103,7 @@ impl Renderer {
             open_data,
             flag_data,
             image_data: Imagedata::new(load_textures(gif).as_slice()),
+            full: *full,
         }
     }
 
@@ -263,7 +266,7 @@ impl Renderer {
                 let field = &self.game_board.fields[y as usize][x as usize];
 
                 // Only render fields that got changed in the last iteration
-                if !self.game_board.changed_fields[y as usize][x as usize] && percentage != 100 {
+                if !self.full && !self.game_board.changed_fields[y as usize][x as usize] && percentage != 100 {
                     continue;
                 }
 

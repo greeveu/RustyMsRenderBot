@@ -25,6 +25,7 @@ const DEFAULT_PROVIDER_MCPLAY: &str = "mcplayhd";
 pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) {
     let game_id = command.data.options.iter().find(|x| x.name.eq("game_id"));
     let use_gif = command.data.options.iter().find(|x| x.name.eq("gif"));
+    let full_render = command.data.options.iter().find(|x| x.name.eq("full"));
     let option_provider = command.data.options.iter().find(|x| x.name.eq("provider"));
 
     if game_id.is_none() || game_id.unwrap().value.as_ref().is_none() {
@@ -41,6 +42,10 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
         .expect("Unable to get the GameID as str");
 
     let gif = use_gif
+        .map(|x| x.value.as_ref().unwrap().as_bool().unwrap_or(false))
+        .unwrap_or(false);
+
+    let full = full_render
         .map(|x| x.value.as_ref().unwrap().as_bool().unwrap_or(false))
         .unwrap_or(false);
 
@@ -70,7 +75,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
 
     let api_data = result_api_data.unwrap();
 
-    let image_data_result = get_image_data(&api_data, &gif).await;
+    let image_data_result = get_image_data(&api_data, &gif, &full).await;
 
     if let Err(error) = image_data_result {
         error_response(command, ctx, error.to_string().as_str()).await;
@@ -257,6 +262,7 @@ pub(crate) async fn run(command: &ApplicationCommandInteraction, ctx: &Context) 
 async fn get_image_data(
     api_data: &ApiData,
     mut gif: &bool,
+    full: &bool,
 ) -> Result<Option<GameData>, CommandError> {
     if let Some(game_data) = &api_data.game_data {
         let option = game_data.split_once('=').expect("Unable to get Version");
@@ -298,6 +304,7 @@ async fn get_image_data(
             game_data.open_data,
             game_data.flag_data,
             gif,
+            full,
         );
 
         let image_data = if *gif {
@@ -339,6 +346,13 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             option
                 .name("gif")
                 .description("Render the game as a gif (Only up to 32x32 fields)")
+                .kind(CommandOptionType::Boolean)
+                .required(false)
+        })
+        .create_option(|option| {
+            option
+                .name("full")
+                .description("Render the full image of the game")
                 .kind(CommandOptionType::Boolean)
                 .required(false)
         })
